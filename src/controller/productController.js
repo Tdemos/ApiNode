@@ -1,9 +1,12 @@
 "use strict";
-const mongoose = require("mongoose");
-const Product = mongoose.model("Product");
+
+//Valida o que vem pelo request...
+const ValitationContract = require("../validators/fluent-validator");
+const repository = require("../repositories/product-repository");
 
 exports.get = (req, res, next) => {
-    Product.find({ active: true }, "title price slug")
+    repository
+        .get()
         .then(data => {
             res.status(201).send(data);
         })
@@ -13,10 +16,8 @@ exports.get = (req, res, next) => {
 };
 
 exports.getBySlug = (req, res, next) => {
-    Product.findOne(
-        { slug: req.params.slug, active: true },
-        "title description price slug tags"
-    )
+    repository
+        .getBySlug(req.params.slug)
         .then(data => {
             res.status(201).send(data);
         })
@@ -26,7 +27,8 @@ exports.getBySlug = (req, res, next) => {
 };
 
 exports.getById = (req, res, next) => {
-    Product.findById(req.params.id)
+    repository
+        .getById(req.params.id)
         .then(data => {
             res.status(201).send(data);
         })
@@ -36,10 +38,8 @@ exports.getById = (req, res, next) => {
 };
 
 exports.getByTag = (req, res, next) => {
-    Product.find(
-        { tags: req.params.tag, active: true },
-        "title description price slug tags"
-    )
+    repository
+        .getByTag(req.params.tag)
         .then(data => {
             res.status(201).send(data);
         })
@@ -49,9 +49,33 @@ exports.getByTag = (req, res, next) => {
 };
 
 exports.post = (req, res, next) => {
-    var product = new Product(req.body);
-    product
-        .save()
+    let contract = new ValitationContract();
+
+    contract.hasMinLen(
+        req.body.title,
+        3,
+        "O título deve conter pelo menos 3 caracteres"
+    );
+    contract.hasMinLen(
+        req.body.slug,
+        3,
+        "O slug deve conter pelo menos 3 caracteres"
+    );
+    contract.hasMinLen(
+        req.body.description,
+        3,
+        "O título deve conter pelo menos 3 caracteres"
+    );
+
+    if (!contract.isValid()) {
+        res.status(400)
+            .send(contract.errors())
+            .end();
+
+        return;
+    }
+    repository
+        .create(req.body)
         .then(x => {
             res.status(201).send({
                 message: "Produto cadastrado com sucesso!"
@@ -67,14 +91,8 @@ exports.post = (req, res, next) => {
 
 exports.put = ("/:id",
 (req, res, next) => {
-    Product.findByIdAndUpdate(req.params.id, {
-        $set: {
-            title: req.body.title,
-            description: req.body.description,
-            slug: req.body.slug,
-            price: req.body.price
-        }
-    })
+    repository
+        .update(req.params.id, req.body)
         .then(x => {
             res.status(201).send({
                 message: "Produto atualizado com sucesso!"
@@ -88,10 +106,9 @@ exports.put = ("/:id",
         });
 });
 
-
 exports.delete = ("/",
 (req, res, next) => {
-    Product.findOneAndRemove(req.params.id)
+        repository.delete(req.body.id)
         .then(x => {
             res.status(201).send({
                 message: "Produto removido com sucesso!"
@@ -104,4 +121,3 @@ exports.delete = ("/",
             });
         });
 });
-
