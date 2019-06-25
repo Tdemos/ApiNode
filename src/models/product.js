@@ -1,7 +1,7 @@
 "use strict";
 
-const mongose = require("mongoose");
-const Schema = mongose.Schema;
+const mongoose = require("mongoose");
+const Schema = mongoose.Schema;
 
 const schema = new Schema({
     title: {
@@ -18,23 +18,23 @@ const schema = new Schema({
     },
     description: {
         type: String,
-        required: 'A description é obrigatória!'
+        required: "A description é obrigatória!"
     },
     price: {
         type: Number,
-        require: true,
+        require: true
     },
     active: {
         type: Boolean,
-        required:  true,
+        required: true,
         default: true
     },
     tags: [
         {
             type: String,
-            required: true,
+            required: true
         }
     ]
 });
 
-module.exports = mongose.model("Product", schema);
+module.exports = mongoose.model("Product", schema);
